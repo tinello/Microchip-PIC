@@ -78,8 +78,6 @@ conf_internal_clock_8mhz:
 	movlw	01101010B ; Clock interno, 4Mhz, PLL disable.
         movwf	OSCCON
 	
-	
-	
 	bcf	OPTION_REG, 7 ; Weak pull-ups are enabled by individual WPUx latch values
 	
 	banksel	PORTA
@@ -120,13 +118,7 @@ main:
     call    DS3231_Read
     movf    seconds, 0
     movwf   PORTA	    ; Muestro los segundos en el Puerto A
-    
-    ;prueba alta impedancia
-    ;call    sleep_1_second
-    ;bcf	    PORTB, 0
-    ;call    sleep_1_second
-    ;bsf	    PORTB, 0
-    
+        
     goto    main
 
     
@@ -138,8 +130,8 @@ main:
 ; Estas subrutinas permiten realizar las tareas de sleeps y esperas.
 ;
 ;*******************************************************************************
-Sleep_4_Microseconds:    ; La llamada "call" aporta 2 ciclos máquina.
-    return	    ; El salto del retorno aporta 2 ciclos máquina.
+Sleep_4_Microseconds:	; La llamada "call" aporta 2 ciclos máquina.
+    return		; El salto del retorno aporta 2 ciclos máquina.
 
 
 
@@ -183,8 +175,8 @@ I2C_BitsCounter	    EQU 0x30	; Cuenta los bits a transmitir o a recibir.
 I2C_Data	    EQU	0x31	; Dato a transmitir o recibido.
 I2C_Flags	    EQU 0x32	; Guarda la información del estado del bus I2C.
 
-scl_pin	    EQU 0x00
-sda_pin	    EQU 0x01
+scl_pin	    EQU 0x00	; RB0
+sda_pin	    EQU 0x01	; RB1
 i2c_port    EQU 0x0D	; Port B
 i2c_tris    EQU 0x8D	; Tris B
 
