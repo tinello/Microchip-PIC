@@ -73,10 +73,15 @@ resetVector:
 PSECT	code, delta=2, abs
 ORG	0x000A
 setup:
-conf_internal_clock_8mhz:
+conf_internal_clock_16mhz:
     banksel	OSCCON
-    movlw	01101010B ; Clock interno, 4Mhz, PLL disable.
+    movlw	01111010B ; Clock interno, 16Mhz, PLL disable.
     movwf	OSCCON
+    
+    ;banksel	OSCTUNE
+    ;movlw	00011111B ; Maximum frequency.
+    ;movwf	OSCTUNE
+    
 
     bcf		OPTION_REG, 7 ; Weak pull-ups are enabled by individual WPUx latch values
 
@@ -131,6 +136,18 @@ main:
 ;
 ;*******************************************************************************
 Sleep_4_Microseconds:	; La llamada "call" aporta 2 ciclos máquina.
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
     return		; El salto del retorno aporta 2 ciclos máquina.
 
 
