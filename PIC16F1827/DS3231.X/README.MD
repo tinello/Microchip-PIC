@@ -4,3 +4,13 @@ Este proyecto lee los segundos desde un DS3231 y los presenta por el puerto A de
 
 Todo el protocolo I2C esta programado en assembler sin el uso del periferico Master Synchronous Serial Port (MSSP).
 
+## Proyecto
+
+El proyecto se creo con el MPLAB X IDE v6.20 y el compilador PIC-AS v2.50
+
+
+## Simulador
+
+El archivo /simulador/ds3231.sim1 se puede abrir con el simulador electronico "SimulIDE" que se puede descargar desde https://simulide.com 
+
+Para este proyecto usamos la version 1.1.0
