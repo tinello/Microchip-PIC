@@ -17,3 +17,4 @@ Para este proyecto usamos la version 1.1.0
 
 ## PIN Grid View
 
+![image info](./docs/images/pin_grid_view.png)
