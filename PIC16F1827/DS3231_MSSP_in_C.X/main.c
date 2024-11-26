@@ -1,93 +1,88 @@
-//CONFIG1
-#pragma config FOSC = INTOSC    // Oscillator Selection->INTOSC oscillator: I/O function on CLKIN pin
-#pragma config WDTE = OFF    // Watchdog Timer Enable->WDT disabled
-#pragma config PWRTE = OFF    // Power-up Timer Enable->PWRT disabled
-#pragma config MCLRE = OFF    // MCLR Pin Function Select->MCLR/VPP pin function is digital input
-#pragma config CP = OFF    // Flash Program Memory Code Protection->Program memory code protection is disabled
-#pragma config CPD = OFF    // Data Memory Code Protection->Data memory code protection is disabled
-#pragma config BOREN = OFF    // Brown-out Reset Enable->Brown-out Reset disabled
-#pragma config CLKOUTEN = OFF    // Clock Out Enable->CLKOUT function is disabled. I/O or oscillator function on the CLKOUT pin
-#pragma config IESO = ON    // Internal/External Switchover->Internal/External Switchover mode is enabled
-#pragma config FCMEN = ON    // Fail-Safe Clock Monitor Enable->Fail-Safe Clock Monitor is enabled
-
-//CONFIG2
-#pragma config WRT = OFF    // Flash Memory Self-Write Protection->Write protection off
-#pragma config PLLEN = ON    // PLL Enable->4x PLL enabled
-#pragma config STVREN = OFF    // Stack Overflow/Underflow Reset Enable->Stack Overflow or Underflow will not cause a Reset
-#pragma config BORV = LO    // Brown-out Reset Voltage Selection->Brown-out Reset Voltage (Vbor), low trip point selected.
-#pragma config LVP = ON    // Low-Voltage Programming Enable->Low-voltage programming enabled
-
-#include <xc.h>
-#include <pic16f1827.h>
-
-#define _XTAL_FREQ 16000000
-
-#define DS3231_ADDRESS 0x68  // Dirección I2C del DS3231
-/*
-#define SDA PORTBbits.RB1;
-#define SCL PORTBbits.RB4;
-#define SEN SSP1CON2bits.SEN;
-#define PEN SSP1CON2bits.PEN;
-#define SSP1IF PIR1bits.SSP1IF;
-#define BF SSP1STATbits.BF;
-#define RW SSP1STATbits.R_nW;
+ /*
+ * MAIN Generated Driver File
+ * 
+ * @file main.c
+ * 
+ * @defgroup main MAIN
+ * 
+ * @brief This is the generated driver implementation file for the MAIN driver.
+ *
+ * @version MAIN Driver Version 1.0.2
+ *
+ * @version Package Version: 3.1.2
 */
 
-void __interrupt() tcInt(void) {
-    __delay_us(1);
-}
+/*
+© [2024] Microchip Technology Inc. and its subsidiaries.
 
-void main(void) {
-    OSCCON = 0b11111011; // 16Mhz
+    Subject to your compliance with these terms, you may use Microchip 
+    software and any derivatives exclusively with Microchip products. 
+    You are responsible for complying with 3rd party license terms  
+    applicable to your use of 3rd party software (including open source  
+    software) that may accompany Microchip software. SOFTWARE IS ?AS IS.? 
+    NO WARRANTIES, WHETHER EXPRESS, IMPLIED OR STATUTORY, APPLY TO THIS 
+    SOFTWARE, INCLUDING ANY IMPLIED WARRANTIES OF NON-INFRINGEMENT,  
+    MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT 
+    WILL MICROCHIP BE LIABLE FOR ANY INDIRECT, SPECIAL, PUNITIVE, 
+    INCIDENTAL OR CONSEQUENTIAL LOSS, DAMAGE, COST OR EXPENSE OF ANY 
+    KIND WHATSOEVER RELATED TO THE SOFTWARE, HOWEVER CAUSED, EVEN IF 
+    MICROCHIP HAS BEEN ADVISED OF THE POSSIBILITY OR THE DAMAGES ARE 
+    FORESEEABLE. TO THE FULLEST EXTENT ALLOWED BY LAW, MICROCHIP?S 
+    TOTAL LIABILITY ON ALL CLAIMS RELATED TO THE SOFTWARE WILL NOT 
+    EXCEED AMOUNT OF FEES, IF ANY, YOU PAID DIRECTLY TO MICROCHIP FOR 
+    THIS SOFTWARE.
+*/
+#include "mcc_generated_files/system/system.h"
+
+#define DS3231_ADDRESS 0x68
+
+/*
+    Main application
+*/
+
+int main(void)
+{
+    SYSTEM_Initialize();
+    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts 
+    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global and Peripheral Interrupts 
+    // Use the following macros to: 
+
+    // Enable the Global Interrupts 
+    INTERRUPT_GlobalInterruptEnable(); 
+
+    // Disable the Global Interrupts 
+    //INTERRUPT_GlobalInterruptDisable(); 
+
+    // Enable the Peripheral Interrupts 
+    INTERRUPT_PeripheralInterruptEnable(); 
+
+    // Disable the Peripheral Interrupts 
+    //INTERRUPT_PeripheralInterruptDisable(); 
+
+    uint8_t raw_data[3];
+    uint8_t raw_data_write[1];
     
-    LATA = 0x00;
-    LATB = 0x12;
-    
-    TRISA = 0x20;
-    TRISB = 0x12;
-    
-    ANSELA = 0x00;
-    ANSELB = 0x00;
-    
-    WPUA = 0x20;
-    WPUB = 0x12;
-    
-    OPTION_REGbits.nWPUEN = 0x0;
-    
-    IOCBP = 0x0;
-    IOCBN = 0x0;
-    IOCBF = 0x0;
-    
-    SSP1STAT = 0x80;
-    SSP1CON1 = 0x8;
-    SSP1CON2 = 0x0;
-    SSP1CON3 = 0x0;
-    SSP1ADD = 0x27;
-    
-    PIE1bits.SSP1IE = 1;
-    PIR1bits.SSP1IF = 0;
-    PIE2bits.BCL1IE = 1;
-    
-    SSP1CON1bits.SSPEN = 1;
-    
-    INTCONbits.PEIE = 1;
-    INTCONbits.GIE = 1; // Enable global interrupt
-    
-    
-    while (1) {
-        __delay_us(100);
-    
-        SSP1CON2bits.SEN = 1;  // Generar condición de Start
-        //while (SSP1CON2bits.SEN);  // Esperar a que se complete
+    unsigned char mask = 0b00001111; // Máscara para seleccionar RB0-RB3
+
+    raw_data_write[0] = 0x00;
+    raw_data[0] = 0x05;
+    raw_data[1] = 0x05;
+    raw_data[2] = 0x05;
         
-        while(!PIR1bits.SSP1IF); /* Wait for interrupt generation by MSSP. */
-        PIR1bits.SSP1IF = 0; /* Clear interrupt bit */
+    while(1)
+    {
+        PORTAbits.RA4 = 1;
+        __delay_ms(200);        
         
-        __delay_us(200);
+        bool ok_wr = I2C1_WriteRead(DS3231_ADDRESS, &raw_data_write, 1, &raw_data, 3);
+        if (ok_wr) {
+            PORTAbits.RA7 = 0;
+        } else {
+            PORTAbits.RA7 = 1;
+        }        
         
-        PORTAbits.RA0 = !PORTAbits.RA0;
-    }
-    
-    return;
-    
+        PORTA = (PORTA & ~mask) | (raw_data[0] & mask);
+        __delay_ms(200);
+        PORTAbits.RA4 = 0;
+    }    
 }

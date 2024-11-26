@@ -2,7 +2,7 @@
 
 manifest_file_version: 1.0.0
 project: DS3231_MSSP_in_C
-creation_date: 2024-09-26T17:55:10.587-03:00[America/Argentina/Buenos_Aires]
+creation_date: 2024-11-26T10:10:45.200-03:00[America/Argentina/Buenos_Aires]
 operating_system: Linux
 mcc_mode: IDE
 mcc_mode_version: v6.20
@@ -14,15 +14,15 @@ content_manager_version: 5.0.1
 is_mcc_offline: false
 is_using_prerelease_versions: false
 mcc_content_registries: https://registry.npmjs.org/
-device_library: {library_class: com.microchip.mcc.melody.Library, name: Melody, version: 2.7.1}
+device_library: {library_class: com.microchip.mcc.melody.Library, name: Melody, version: 2.8.0}
 packs: {name: PIC12-16F1xxx_DFP, version: 1.7.242}
 modules:
 - {name: '@mchp-mcc/i2c-host-driver', type: MELODY, version: 1.0.5}
 - {name: '@mchp-mcc/main-manager', type: MELODY, version: 3.1.2}
-- {name: '@mchp-mcc/pic-8bit', type: MELODY, version: 5.28.2}
+- {name: '@mchp-mcc/pic-8bit', type: MELODY, version: 5.28.4}
 - {name: '@mchp-mcc/pic16-configuration-bits-v6', type: MELODY, version: 1.0.3}
 - {name: '@mchp-mcc/pic16-pin-manager', type: MELODY, version: 3.6.1}
-- {name: '@mchp-mcc/pin-content-processor', type: MELODY, version: 3.8.0}
-- {name: '@mchp-mcc/scf-pic8-interrupt-v3', type: MELODY, version: 1.0.2}
-- {name: '@mchp-mcc/scf-pic8-mssp-v1', type: MELODY, version: 7.0.1}
+- {name: '@mchp-mcc/pin-content-processor', type: MELODY, version: 3.9.0}
+- {name: '@mchp-mcc/scf-pic8-interrupt-v3', type: MELODY, version: 1.0.3}
+- {name: '@mchp-mcc/scf-pic8-mssp-v1', type: MELODY, version: 7.0.2}
 - {name: '@mchp-mcc/scf-pic8-osc-v7', type: MELODY, version: 1.0.2}
