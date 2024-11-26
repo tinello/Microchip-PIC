@@ -23,19 +23,19 @@
 *.debug
 
 **/*.X/html/
-**/*.X/nbproject/private/
-**/*.X/nbproject/Package-*.bash
+#**/*.X/nbproject/private/
+#**/*.X/nbproject/Package-*.bash
 **/*.X/build/
 **/*.X/nbbuild/
 **/*.X/debug/
 **/*.X/dist/
 **/*.X/nbdist/
-**/*.X/nbactions.xml
-**/*.X/nb-configuration.xml
+#**/*.X/nbactions.xml
+#**/*.X/nb-configuration.xml
 **/*.X/funclist
-**/*.X/nbproject/Makefile-*
+#**/*.X/nbproject/Makefile-*
 **/*.X/disassembly/
-**/*.X/.generated_files/
+#**/*.X/.generated_files/
 **/*.X/defmplabxtrace.*
 
 # End of https://www.toptal.com/developers/gitignore/api/mplabx
