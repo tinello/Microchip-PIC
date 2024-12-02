@@ -50,9 +50,26 @@
     #define BCL1IE 0x03
     #define GIE 0x07
     #define PEIE 0x06
+    #define IOCIE 0x03
+    #define INTF 0x01
+    #define INTEDG 0x06
+    
 
     #define BCL1IF  0x02
     #define SSP1IF  0x03
+    
+    #define HFIOFR 0x04
+    #define HFIOFS 0x00
+    
+    #define WCOL 0x07
+    #define SSP1OV 0x06
+    
+    #define BF 0x00
+    #define R_W 0x02
+    #define Z 0x02
+    
+    #define ACKDT 0x05
+    #define ACKEN 0x04
     
     ; ------------------------------
     ; Sección de datos: Usando PSECT para variables
@@ -68,7 +85,7 @@
     sleep1:   DS 1    ; Variable para sleep1
     sleep2:   DS 1    ; Variable para sleep2
     sleep3:   DS 1    ; Variable para sleep3
-    counts:   DS 1    ; 
+    flags:    DS 1    ; 
 
     ; ------------------------------
     ; Sección de código: Inicio de programa
@@ -91,20 +108,19 @@ i2c1_error_isr:
     BTFSS   PIR2, BCL1IF
     goto    i2c1_isr    
     bcf	    PIR2, BCL1IF
-    ;BANKSEL PORTA
-    ;BSF	    PORTA, 3
+    banksel PORTB
+    bsf	    PORTB, 0
     
 i2c1_isr:
     BANKSEL PIR1
     BTFSS   PIR1, SSP1IF
     goto    continuar
-
     bcf	    PIR1, SSP1IF
-    INCF    counts, 1
-    movf    counts, 0
-    andlw   00000111B
-    BANKSEL PORTA
-    iorwf   PORTA, 1
+    banksel OPTION_REG
+    bcf	    OPTION_REG, 1 ;INTF
+    bcf	    flags, 0
+    banksel PORTB
+    bsf	    PORTB, 2
     
 
     
@@ -118,10 +134,25 @@ continuar:
 Main:
     ; Configurar el reloj interno
     BANKSEL OSCCON
-    MOVLW   0x68           ; Configurar frecuencia a 4MHz
-    ;MOVLW   0x60           ; Configurar frecuencia a 4MHz
+    MOVLW   0x6A           ; Configurar frecuencia a 4MHz MCC
+    ;MOVLW   0xEA           ; Configurar frecuencia a 4MHz IA
     MOVWF   OSCCON
 
+    banksel OSCSTAT
+    clrf    OSCSTAT
+    ;btfss OSCSTAT, HFIOFR ; Int. osc. running?
+    ;goto $-1 ; No, loop back
+    ;btfss OSCSTAT, HFIOFS ; Osc. stable?
+    ;goto $-1 ; No, loop back.
+    
+    banksel OSCTUNE
+    clrf    OSCTUNE
+    
+    banksel BORCON
+    clrf    BORCON
+    
+    
+    
     BANKSEL OPTION_REG
     bcf	    OPTION_REG, 7 ; Weak pull-ups are enabled by individual WPUx latch values
     
@@ -154,15 +185,38 @@ Main:
 
     BANKSEL PORTA
     clrf    PORTA
-    ;bsf	    PORTA, 3
+    
+    BANKSEL IOCBP
+    clrf    IOCBP
+    
+    BANKSEL IOCBN
+    clrf    IOCBN
+    
+    BANKSEL IOCBF
+    clrf    IOCBF
+    
     
     ; Inicializar I2C
     CALL I2C_Init
 
-    BANKSEL INTCON
-    bsf	    INTCON, PEIE
-    bsf	    INTCON, GIE
     
+    banksel SSP1MSK
+    movlw   0xFE
+    movwf   SSP1MSK
+    
+    BANKSEL INTCON
+    bsf	    INTCON, IOCIE
+    bcf	    INTCON, INTF ;Clears the Interrupt flag for the external interrupt, INT.
+    bsf	    INTCON, GIE
+    bsf	    INTCON, PEIE
+    
+    BANKSEL OPTION_REG
+    bsf	    OPTION_REG, INTEDG ;Sets the edge detect of the external interrupt to positive edge. This way, the Interrupt flag will be set when the external interrupt pin level transitions from low to high.
+    
+    BANKSEL PIR1
+    bcf	    PIR1, SSP1IF
+    
+    bcf	    flags, 0
 
 MainLoop:
     BANKSEL PORTA
@@ -180,39 +234,16 @@ poner_1:
     
 leer_rtc:
     CALL    sleep_1_second
-    BANKSEL PORTA
-    bcf	    PORTA, 6
-    bcf	    PORTA, 4
-    bcf	    PORTA, 3
-    bcf	    PORTA, 2
-    bcf	    PORTA, 1
-    bcf	    PORTA, 0
-    movlw   0x00
-    movwf   counts
-    CALL    sleep_1_second
-    
-    
-    ;BANKSEL PORTA
-    //movlw   0b01000000
-    //xorwf   PORTA, 1
-    ;bsf	    PORTA, 6
     
     ; Leer la hora actual desde el DS3231
     CALL Read_Time
     
-    ;BANKSEL PORTA
-    //movlw   0b00100000
-    //xorwf   PORTA, 1
-    ;bsf	    PORTA, 4
-    
-
     ; Aquí puedes agregar más código para manipular los datos leídos
-    ;movf    second, 0
-    ;andlw   0x03
-    ;BANKSEL PORTA
-    ;iorwf   PORTA, 1	    ; Muestro los segundos en el Puerto A
-    
-    ;CALL    sleep_1_second
+    movf    second, 0
+    andlw   0x0F
+    BANKSEL PORTA
+    iorwf   PORTA, 1	    ; Muestro los segundos en el Puerto A
+    BSF	    PORTA, 6
     
     GOTO MainLoop        ; Bucle infinito
 
@@ -254,9 +285,9 @@ I2C_Init:
     movwf   SSP1STAT
 
     BANKSEL SSP1CON1
-    ;MOVLW 0x28           ; Configurar I2C en modo maestro
+    ;MOVLW 0x28           ; Configurar I2C en modo maestro IA
     ;SSPM FOSC/4_SSPxADD_I2C; CKP disabled; SSPEN disabled; SSPOV no_overflow; WCOL no_collision;
-    movlw 0x08
+    movlw 0x08	; MCC
     MOVWF SSP1CON1
     
     BANKSEL SSP1CON2
@@ -303,6 +334,9 @@ I2C_Stop:
     BSF SSP1CON2, PEN     ; Iniciar condición de STOP
     BTFSC SSP1CON2, PEN   ; Esperar a que se complete el STOP
     GOTO $-1
+    BANKSEL SSP1CON1
+    bcf	    SSP1CON1, WCOL
+    bcf	    SSP1CON1, SSP1OV
     RETURN
 
 ; ---------------------------
@@ -324,29 +358,82 @@ I2C_Read:
     BSF SSP1CON2, RCEN    ; Habilitar la recepción
     BTFSC SSP1CON2, RCEN  ; Esperar a que se complete la recepción
     GOTO $-1
+    banksel SSP1STAT
+    BTFSS SSP1STAT, BF
+    GOTO $-1
     BANKSEL SSP1BUF
-    MOVF SSP1BUF, W       ; Mover el byte recibido a W
+    MOVF SSP1BUF, 0       ; Mover el byte recibido a W
+    
+    ; Manejo del ACK/NACK
+    btfss   STATUS, Z               ; Verificar ACK (W = 0)
+    bcf     SSP1CON2, ACKDT         ; ACK (ACKDT = 0)
+    btfsc   STATUS, Z
+    bsf     SSP1CON2, ACKDT         ; NACK (ACKDT = 1)
+    bsf     SSP1CON2, ACKEN         ; Iniciar secuencia ACK/NACK
+    btfsc   SSP1CON2, ACKEN         ; Esperar a que se complete
+    goto    $-1
+    
     RETURN
 
+;////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+i2c_idle:
+   banksel  SSP1STAT
+   btfsc    SSP1STAT,R_W
+   goto	    $-1
+
+i2c_idle_loop:
+   banksel  SSP1CON2
+   movf	    SSP1CON2, 0
+   andlw    0x1F
+   
+   banksel  STATUS
+   btfss    STATUS, Z
+   goto	    i2c_idle_loop
+   return
+ 
 ; ---------------------------
 ; Leer la fecha y hora del DS3231
 ; ---------------------------
 Read_Time:
+    bsf	    flags, 0
     CALL I2C_Start
+    BTFSC   flags, 0
+    GOTO $-1
+    
+    bsf	    flags, 0
     MOVLW DS3231_ADDRESS << 1 | WRITE
     CALL I2C_Write
+    BTFSC   flags, 0
+    GOTO $-1
+    
+    bsf	    flags, 0
     MOVLW 0x00           ; Dirección del registro de segundos
     CALL I2C_Write
-    ;CALL I2C_Stop
+    BTFSC   flags, 0
+    GOTO $-1
+    
+    
+    bsf	    flags, 0
     CALL I2C_Start
+    BTFSC   flags, 0
+    GOTO $-1
+    
+    bsf	    flags, 0
     MOVLW DS3231_ADDRESS << 1 | READ
     CALL I2C_Write
+    BTFSC   flags, 0
+    GOTO $-1
+    
     ; Leer segundos
+    bsf	    flags, 0
     CALL I2C_Read
     MOVWF second
+    BTFSC   flags, 0
+    GOTO $-1
     ; Leer minutos
-    CALL I2C_Read
-    MOVWF minute
+    ;CALL I2C_Read
+    ;MOVWF minute
     ; Leer horas
     ;CALL I2C_Read
     ;MOVWF hour
@@ -363,11 +450,9 @@ Read_Time:
     ;CALL I2C_Read
     ;MOVWF year
     
-    BANKSEL PORTA
-    bsf	    PORTA, 6
     CALL I2C_Stop
-    BANKSEL PORTA
-    bsf	    PORTA, 4
+    
+    
     RETURN
 
 ; ---------------------------

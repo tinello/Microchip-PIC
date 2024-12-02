@@ -29,7 +29,7 @@
         <targetDevice>PIC16F1827</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>PICkit3PlatformTool</platformTool>
+        <platformTool>Simulator</platformTool>
         <languageToolchain>pic-as</languageToolchain>
         <languageToolchainVersion>2.50</languageToolchainVersion>
         <platform>2</platform>
@@ -1110,7 +1110,7 @@
         <property key="list-define-symbols" value=""/>
         <property key="list-include-directories" value=""/>
         <property key="suppress-warnings" value="false"/>
-        <property key="verbose" value="false"/>
+        <property key="verbose" value="true"/>
         <property key="warning-level" value="0"/>
         <property key="xassembler-with-cpp" value="true"/>
       </pic-as-assembler>
