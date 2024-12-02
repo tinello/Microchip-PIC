@@ -36,6 +36,16 @@
 
 #define DS3231_ADDRESS 0x68
 
+void delay(unsigned long time_ms);
+void convert(uint8_t *low, uint8_t *hight, uint8_t *data);
+
+uint8_t low_seconds;
+uint8_t hig_seconds;
+
+uint8_t low_minuts;
+uint8_t hig_minuts;
+
+
 /*
     Main application
 */
@@ -62,27 +72,57 @@ int main(void)
     uint8_t raw_data[3];
     uint8_t raw_data_write[1];
     
-    unsigned char mask = 0b00001111; // Máscara para seleccionar RB0-RB3
-
     raw_data_write[0] = 0x00;
-    raw_data[0] = 0x05;
+    raw_data[0] = 0x01;
     raw_data[1] = 0x05;
-    raw_data[2] = 0x05;
-        
+    raw_data[2] = 0x09;
+    
+    
+    unsigned char mask = 0b00001111; // Máscara para seleccionar RB0-RB3
+    
+    I2C1_Write(DS3231_ADDRESS, raw_data, 3);
+    
     while(1)
     {
-        PORTAbits.RA4 = 1;
-        __delay_ms(200);        
+        //PORTAbits.RA4 = 1;
+        //delay(200);
         
-        bool ok_wr = I2C1_WriteRead(DS3231_ADDRESS, &raw_data_write, 1, &raw_data, 3);
+        
+        
+        bool ok_wr = I2C1_WriteRead(DS3231_ADDRESS, raw_data_write, 1, raw_data, 3);
         if (ok_wr) {
-            PORTAbits.RA7 = 0;
+            //PORTAbits.RA7 = 0;
         } else {
-            PORTAbits.RA7 = 1;
-        }        
+            //PORTAbits.RA7 = 1;
+        }
         
-        PORTA = (PORTA & ~mask) | (raw_data[0] & mask);
-        __delay_ms(200);
-        PORTAbits.RA4 = 0;
+        while(i2c1Status.state != 0){}
+        
+        //lower_seconds = raw_data[0] & 0x0F; // Máscara para los 4 bits menos significativos
+        //upper_seconds = (raw_data[0] >> 4) & 0x0F; // Desplazar y aplicar máscara
+        
+        convert(&low_seconds, &hig_seconds, &(raw_data[0]));
+        convert(&low_minuts, &hig_minuts, &(raw_data[1]));
+        
+        delay(200);
+        //PORTAbits.RA4 = 0;
     }    
+}
+
+void delay(unsigned long time_ms){
+    for (unsigned long i=0; i<time_ms; i++ ){
+        __delay_ms(1);
+        if(PORTAbits.RA7 == 1){
+            PORTA = low_minuts;
+            PORTAbits.RA6 = 1;
+        } else {
+            PORTA = hig_minuts;
+            PORTAbits.RA7 = 1;
+        }
+    }
+}
+
+void convert(uint8_t *low, uint8_t *hight, uint8_t *data){
+    *low = *data & 0x0F; // Máscara para los 4 bits menos significativos
+    *hight = (*data >> 4) & 0x0F; // Desplazar y aplicar máscara
 }
